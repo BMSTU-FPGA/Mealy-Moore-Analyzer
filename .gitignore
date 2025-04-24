@@ -172,4 +172,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
-main.spec
+*.spec
+
+# Popular IDE's parasite folders
+.vscode/
+.idea/
