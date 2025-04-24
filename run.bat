@@ -1,28 +1,35 @@
 @echo off
-
-REM Check if the virtual environment directory exists
-if not exist "%USERPROFILE%\.venv" (
-    python -m venv "%USERPROFILE%\.venv"
+REM Check if .venv directory exists
+if not exist ".venv" (
+    REM Create virtual environment
+    python -m venv .venv
 )
 
 REM Activate the virtual environment
-call "%USERPROFILE%\.venv\Scripts\activate.bat"
+call .venv\Scripts\activate.bat
 
-REM Get the Python version
-for /f "tokens=1,2 delims=." %%a in ('python -V 2^>^&1 ^| awk "{print $2}" ^| cut -d. -f1-2') do (
-    set python_version=%%a.%%b
+REM Get Python version as major.minor (e.g. 3.10)
+for /f "tokens=2 delims= " %%v in ('python -V 2^>^&1') do set "full_version=%%v"
+for /f "tokens=1,2 delims=." %%a in ("%full_version%") do (
+    set "major=%%a"
+    set "minor=%%b"
 )
 
-REM Check if the version is more than 3.11 (then we need to install pip)
-if %python_version% gtr 3.11 (
+REM Compare version to 3.11
+setlocal enabledelayedexpansion
+if !major! EQU 3 (
+    if !minor! GTR 11 (
+        REM Upgrade setuptools if Python version > 3.11
+        pip install --upgrade setuptools
+    )
+) else if !major! GTR 3 (
+    REM If major version > 3, also upgrade setuptools
     pip install --upgrade setuptools
 )
+endlocal
 
 REM Install requirements
 pip install -r requirements.txt
 
 REM Run the analyzer script
 python analyzer.py
-
-REM Deactivate the virtual environment
-call deactivate
